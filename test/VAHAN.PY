@@ -1,3 +1,9 @@
+# DISPLAYS UPDATED UI OF (KP'S) + ADDED MAIN SECTION (completed)
+# 4.3 - Fuel Category Analysis 
+#4.4 - complete UI with all sections and styles
+#completed fuel world
+# 4.5- started the category vs manufacturer section
+#4.5- completed the category vs manufacturer section + market insights ( but need to work on it more)
 import itertools
 import streamlit as st
 import pandas as pd
@@ -18,7 +24,7 @@ st.markdown("""
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         padding: 2rem 1rem;
         border-radius: 15px;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
         box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         position: relative;
         overflow: hidden;
@@ -307,7 +313,8 @@ st.set_page_config(
 st.markdown("""
 <div class="main-header">
     <div class="animated-car" >🚗</div>
-    <h1 class="main-title">Vehicle Market Intelligence Dashboard</h1>
+    <h1 class="main-title"  style="margin-bottom:0px;">VAHAN 2.0 DASHBOARD</h1>
+    <p class="subtitle" style="margin-top:0px;">Vehicle Market Intelligence & Insights</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -367,9 +374,9 @@ col1, col2, col3, col4 = st.columns([1, 2, 2, 1])
 
 with col1:
     # 1. Year Filter (Single select)
-    df_maker_category['Year'] = pd.to_numeric(
-        df_maker_category['Year'], errors='coerce')
-    years = sorted(df_maker_category['Year'].dropna().unique())
+    df_category_month ['Year'] = pd.to_numeric(
+        df_category_month ['Year'], errors='coerce')
+    years = sorted(df_category_month ['Year'].dropna().unique())
     selected_year = st.selectbox(
         "📅 Calender Year", years, help="Select reporting year for analysis")
 
@@ -455,6 +462,10 @@ with col_kpi1:
     """, unsafe_allow_html=True)
 
 # --- 2️⃣ EV Market Share ---
+# Ensure 'Total' is numeric before doing calculations
+df_fuel_category['Total'] = pd.to_numeric(df_fuel_category['Total'], errors='coerce').fillna(0)
+df_fuel_category['Year'] = pd.to_numeric(df_fuel_category['Year'], errors='coerce')
+
 ev_total_all = df_fuel_category[df_fuel_category['Fuel'].str.contains(
     "ELECTRIC", case=False, na=False)]['Total'].sum()
 market_total_all = df_fuel_category['Total'].sum()
@@ -579,8 +590,10 @@ main_left, main_middle, main_right = st.columns(
 
 with main_left:
     # ---- MANUFACTURER GROWTH SECTION (TOP-LEFT) ----
-    st.markdown("### Manufacturer Growth")
-
+    st.markdown(
+        '<h3 style="margin-top:5px">Manufacturer Growth</h3>',
+        unsafe_allow_html=True
+    )
     # Process data for manufacturer growth
     df = df_maker_month.copy()
     selected_makers = selected_maker
@@ -700,7 +713,11 @@ with main_left:
 
 
 with main_middle:
-    st.markdown("### Vehicle Category Growth")
+    # st.markdown("### Vehicle Category Growth")
+    st.markdown(
+        '<h3 style="margin-top:5px">Vehicle Category Growth</h3>',
+        unsafe_allow_html=True
+    )
 
     # Step 1: Copy & Clean
     df = df_category_month.copy()
@@ -824,7 +841,10 @@ with main_right:
 
     df_total = df_maker_category_raw.copy()
     # ---- RIGHT SECTION: Top Manufacturers Market Share ----
-    st.markdown("### Top Market Share")
+    st.markdown(
+        '<h3 style="margin-top:5px">Top Manufacturers Market Share</h3>',
+        unsafe_allow_html=True
+    )
 
     # Group and clean data
     df_market = df_total.groupby("Maker")["Total"].sum().reset_index()
@@ -880,14 +900,14 @@ with main_right:
 
 
 # ---- BOTTOM DASHBOARD LAYOUT ----
-bottom_left, bottom_middle, bottom_right = st.columns(
-    [0.5, 0.5, 0.5])
+bottom_left, bottom_middle = st.columns(
+    [1.5, 2])
 
 
-def main():
+def bottom_left_code():
     # st.set_page_config(page_title="Top 5 Fuels Market Share", layout="wide")
     st.markdown(
-        "<h2 >Fuel World 🌍</h2>",
+        "<h3 >Fuel World 🌍</h3>",
         unsafe_allow_html=True
     )
 
@@ -938,7 +958,7 @@ def main():
         fig.update_traces(
             textinfo="percent+label",
             pull=[0.05] * len(top_5_fuels),
-            textfont_size=8
+            textfont_size=12
         )
         st.plotly_chart(fig, use_container_width=False)
 
@@ -1063,7 +1083,7 @@ def main():
 
             st.markdown(f"""
                 <div style='background: #F7FAFC; padding: 10px; border-radius: 12px; 
-                            margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);'>
+                            margin-bottom: 1px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);'>
                     <div style='display: flex; justify-content: space-between; align-items: center;'>
                         <div style='flex: 1; font-size: 1.0rem; font-weight: 600; color: #2D3748;'>{row['Fuel']}</div>
                         <div style='flex: 1; text-align: center; font-size: 1.1rem; font-weight: 500; color: #2B6CB0;'>{market_share}</div>
@@ -1108,14 +1128,24 @@ def main():
 
         for fuel in top_5_fuels["Fuel"]:
             # Filter for the specific fuel
-            fuel_data = df_fuel_category[df_fuel_category["Fuel"] == fuel]
+            fuel_data = df_fuel_category[df_fuel_category["Fuel"] == fuel].copy()
+
+            # Ensure numeric for vehicle columns
+            fuel_data[vehicle_cols] = fuel_data[vehicle_cols].apply(pd.to_numeric, errors='coerce')
 
             # Sum across all years for each vehicle category
             vehicle_sums = fuel_data[vehicle_cols].sum()
 
-            # Find the top vehicle category name and its total
-            top_vehicle_cat = vehicle_sums.idxmax()
-            top_vehicle_val = vehicle_sums.max()
+            # Drop NaNs just in case
+            vehicle_sums = vehicle_sums.dropna()
+
+            # If all NaNs, skip
+            if vehicle_sums.empty:
+                top_vehicle_cat = None
+                top_vehicle_val = 0
+            else:
+                top_vehicle_cat = vehicle_sums.idxmax()
+                top_vehicle_val = vehicle_sums.max()
 
             top_fuel_vehicle.append({
                 "Fuel": fuel,
@@ -1272,87 +1302,589 @@ def main():
         components.html(html_content, height=420, scrolling=True)
 
 
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 with bottom_left:
-    main()
+    bottom_left_code()
 
-# Assuming df_fuel_category already exists and is cleaned
-# df_fuel_category has columns: ["Fuel", "Year", "Total"]
+with bottom_middle:
+    
+ 
 
-# def main():
-#     st.title("🚗 Top 5 Fuels Market Share Analysis")
+    # --- Prepare data ---
+    year_df = df_maker_category[df_maker_category['Year'] == int(selected_year)].copy()
+    exclude_cols = ['S No', 'Maker', 'Year', 'Total']
+    category_cols = [col for col in year_df.columns if col not in exclude_cols]
+    year_df = clean_dataframe(year_df)
+    year_df[category_cols] = year_df[category_cols].apply(pd.to_numeric, errors='coerce')
+    category_totals = year_df[category_cols].sum().sort_values(ascending=False)
+    top_5 = category_totals.head(5).reset_index()
+    top_5.columns = ['Vehicle Category', 'Total Units Sold']
 
-#     # ---- Calculate Top 5 Fuels ----
-#     fuel_totals = (
-#         df_fuel_category.groupby("Fuel", as_index=False)["Total"]
-#         .sum()
-#         .sort_values(by="Total", ascending=False)
-#     )
+    # Calculate total market for percentage calculation
+    total_market = top_5['Total Units Sold'].sum()
 
-#     # Take top 5 fuels
-#     top_5_fuels = fuel_totals.head(5)
+    top_makers = []
+    for category in top_5['Vehicle Category']:
+        top_row = year_df.loc[year_df[category].idxmax()]
+        top_makers.append({
+            'Vehicle Category': category,
+            'Top Maker': top_row['Maker'],
+            'Units Sold': int(top_row[category])
+        })
 
-#     # Calculate market share
-#     total_market = top_5_fuels["Total"].sum()
-#     top_5_fuels["Market Share (%)"] = (
-#         top_5_fuels["Total"] / total_market
-#     ) * 100
+    top_makers_df = pd.DataFrame(top_makers)
+    merged_df = top_5.merge(top_makers_df, on='Vehicle Category')
 
-#     # ---- Tabs ----
-#     tab1, tab2, tab3 = st.tabs(
-#         ["📊 Pie Chart", "📋 Detail Breakdown", "💡 Insights"])
+    # Add category share calculation
+    merged_df['Category Share (%)'] = (merged_df['Total Units Sold'] / total_market * 100).round(1)
 
-#     # ---- Pie Chart ----
-#     with tab1:
-#         fig = px.pie(
-#             top_5_fuels,
-#             names="Fuel",
-#             values="Market Share (%)",
-#             title="Top 5 Fuel Types - Market Share",
-#             color_discrete_sequence=px.colors.sequential.RdBu
-#         )
-#         fig.update_traces(textinfo="percent+label",
-#                           pull=[0.05]*len(top_5_fuels))
-#         st.plotly_chart(fig, use_container_width=True)
+    # --- Redesigned Modern Category Cards ---
+    st.markdown(
+        '<h3 style="margin-bottom:0px">Top Vehicle Category & Manufacturer</h3>',
+        unsafe_allow_html=True
+    )
+    st.markdown('<hr class="custom-divider" style="margin-top:40px; margin-bottom:0px; background: #">', unsafe_allow_html=True)
 
-#     # ---- Detail Breakdown ----
-#     with tab2:
-#         st.subheader("Detailed Market Share Breakdown")
-#         st.dataframe(
-#             top_5_fuels.style.format({
-#                 "Total": "{:,.0f}",
-#                 "Market Share (%)": "{:.2f}%"
-#             }),
-#             use_container_width=True
-#         )
+    html_content = """
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-#     # ---- Insights ----
-#     with tab3:
-#         st.subheader("Key Insights")
-#         top_fuel = top_5_fuels.iloc[0]
-#         st.markdown(f"""
-#         - **{top_fuel['Fuel']}** dominates the market with **{top_fuel['Market Share (%)']:.2f}%** share.
-#         - The combined top 3 fuels account for **{top_5_fuels.head(3)['Market Share (%)'].sum():.2f}%** of the market.
-#         - The gap between the top and bottom fuel in the top 5 list is **{top_fuel['Market Share (%)'] - top_5_fuels.iloc[-1]['Market Share (%)']:.2f}%**.
-#         - Data includes all years available in the dataset.
-#         """)
+    .cards-container {
+        display: flex;
+        overflow-x: auto;
+        gap: 24px;
+        padding: 24px 8px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;  
+
+    }
+
+    .cards-container::-webkit-scrollbar { 
+        display: none;
+    }
+
+    .cards-container::-webkit-scrollbar-track { 
+        background: rgba(139, 123, 255, 0.1);
+        border-radius: 10px;
+    }
+
+    .cards-container::-webkit-scrollbar-thumb { 
+        background: rgba(139, 123, 255, 0.3);
+        border-radius: 10px;
+        transition: background 0.3s ease;
+    }
+
+    .cards-container::-webkit-scrollbar-thumb:hover { 
+        background: rgba(139, 123, 255, 0.5);
+    }
+
+    .category-card {
+        flex: 0 0 auto;
+        width: 300px;
+        background: linear-gradient(135deg, #faf7ff 0%, #f0f4ff 50%, #f7faff 100%);
+        border-radius: 28px;
+        box-shadow: 
+            0 12px 40px rgba(139, 123, 255, 0.15),
+            inset 0 1px 0 rgba(255,255,255,0.6);
+        border: 1px solid rgba(139, 123, 255, 0.12);
+        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        position: relative;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        padding: 18px 20px;
+        overflow: hidden;
+    }
+
+    .category-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #e8dcff 0%, #d4c5ff 50%, #c0b0ff 100%);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        border-radius: 28px;
+        z-index: 1;
+    }
+
+    .category-card:hover {
+        transform: translateY(-12px) scale(1.02);
+        box-shadow: 
+            0 25px 80px rgba(139, 123, 255, 0.25),
+            inset 0 1px 0 rgba(255,255,255,0.8);
+    }
+
+    .category-card:hover::before {
+        opacity: 1;
+    }
+
+    .category-card > * {
+        position: relative;
+        z-index: 2;
+    }
+
+    .rank-badge {
+        position: absolute;
+        top: -1px;
+        left: 1px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-size: 18px;
+        font-weight: 800;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        z-index: 3;
+        border: 3px solid white;
+    }
+
+    .category-icon {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, #6b5ce7 0%, #8b7cf6 100%);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(107, 92, 231, 0.3);
+    }
+
+    .category-name {
+        font-size: 25px;
+        font-weight: 700;
+        color: #1e1b4b;
+        margin: 0 0 8px 0;
+        line-height: 1.2;
+        letter-spacing: -0.5px;
+        text-align: center;
+    }
+
+    .category-subtitle {
+        font-size: 14px;
+        color: #6b5ce7;
+        margin: 0 0 24px 0;
+        font-weight: 500;
+        opacity: 0.8;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 24px;
+    }
+
+    .stat-item {
+        background: rgba(255, 255, 255, 0.7);
+        padding: 10px;
+        border-radius: 16px;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        transition: all 0.3s ease;
+    }
+
+    .stat-item:hover {
+        background: rgba(255, 255, 255, 0.9);
+        transform: translateY(-2px);
+    }
+
+    .stat-value {
+        font-size: 20px;
+        font-weight: 500;
+        color: #1e1b4b;
+        margin: 0 0 4px 0;
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: #6b7280;
+        font-weight: 500;
+        text-transform: capitalize;
+        letter-spacing: 0.5px;
+        margin-top: 4px;
+    }
+
+    .leader-section {
+        background: rgba(255, 255, 255, 0.8);
+        padding: 20px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.6);
+    }
+
+    .leader-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .leader-title {
+        font-size: 12px;
+        color: #6b7280;
+        font-weight: 600;
+        text-transform: Captitalize;
+        letter-spacing: 0.5px;
+        margin: 0;
+    }
+
+    .crown-icon {
+        width: 50px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .leader-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1e1b4b;
+        margin: 0 0 2px 0;
+        line-height: 1.2;
+    }
+
+    .leader-stats {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .leader-units {
+        font-size: 16px;
+        font-weight: 700;
+        color: #059669;
+        margin: 0;
+    }
+
+    .leader-dominance {
+        font-size: 14px;
+        font-weight: 600;
+        color: #6b5ce7;
+        background: rgba(107, 92, 231, 0.1);
+        padding: 6px 12px;
+        border-radius: 20px;
+        margin: 0;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .category-card {
+            width: 300px;
+            padding: 24px 20px;
+        }
+        
+        .category-name {
+            font-size: 20px;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+    }
+
+    /* Animation keyframes */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .category-card {
+        animation: slideIn 0.6s ease-out forwards;
+    }
+
+    .category-card:nth-child(2) { animation-delay: 0.1s; }
+    .category-card:nth-child(3) { animation-delay: 0.2s; }
+    .category-card:nth-child(4) { animation-delay: 0.3s; }
+    .category-card:nth-child(5) { animation-delay: 0.4s; }
+    </style>
+
+    <div class="cards-container">
+    """
+
+    def format_units(n):
+        if n >= 1e7: 
+            return f"{n/1e7:.1f} Cr"
+        elif n >= 1e5: 
+            return f"{n/1e5:.1f} L"
+        elif n >= 1e3: 
+            return f"{n/1e3:.0f}K"
+        return f"{n:,.0f}"
 
 
-# main()
+
+    for i, row in merged_df.iterrows():
+        dominance = (row['Units Sold'] / row['Total Units Sold']) * 100
+        # icon = category_icons.get(row['Vehicle Category'].upper(), category_icons['default'])
+        
+        html_content += f"""
+        <div class="category-card">
+            <div class="rank-badge">#{i+1}</div>
+            
+            
+            <div class="category-name">{row['Vehicle Category']}
+                    <div class="leader-title">Top Vehicle</div>
+            </div>
+             
+              
+            
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">{format_units(row['Total Units Sold'])}
+                    <div class="stat-label">Total Units</div>
+                </div>
+                    
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{row['Category Share (%)']:.1f}%</div>
+                    <div class="stat-label">Market Share</div>
+                </div>
+            </div>
+            
+            <div class="leader-section">
+
+                <div class="leader-name">{row['Top Maker'][:28]}{'...' if len(row['Top Maker'])>28 else ''}</div>
+                <div class="leader-header">
+                    <div class="leader-title">Dominant Manufacturer</div>
+                </div>
+                <div class="leader-stats">
+                    <div class="leader-units">{format_units(row['Units Sold'])} units</div>
+                    <div class="leader-dominance">{dominance:.1f}% dominance</div>
+                </div>
+            </div>
+        </div>
+        """
+
+    html_content += "</div>"
+
+    components.html(html_content, height=460, scrolling=True)
+    
+    
+
+
+
+
+
+# Copy original data
+df = df_maker_category.copy()
+df_fuel = df_fuel_category.copy()
+
+# --- Preprocess Data ---
+exclude_cols = ['S No', 'Maker', 'Year', 'Total']
+vehicle_cols = [col for col in df.columns if col not in exclude_cols]
+
+# Ensure numeric
+df[vehicle_cols + ['Total']] = df[vehicle_cols + ['Total']].apply(pd.to_numeric, errors='coerce')
+df_fuel[vehicle_cols + ['Total']] = df_fuel[vehicle_cols + ['Total']].apply(pd.to_numeric, errors='coerce')
+
+# --- 1. Electric Vehicles Growth ---
+ev_fuel_rows = df_fuel[df_fuel['Fuel'].str.contains('ELECTRIC', case=False)]
+ev_per_year = ev_fuel_rows.groupby('Year')[vehicle_cols].sum().sum(axis=1)
+ev_growth = ((ev_per_year.iloc[-1] - ev_per_year.iloc[-2]) / ev_per_year.iloc[-2]) * 100 if len(ev_per_year) > 1 else 0
+
+# --- 2. Top Manufacturer in 2-Wheelers ---
+two_wheelers_cols = ['2WIC', '2WN', '2WT']
+maker_2w_totals = df.groupby('Maker')[two_wheelers_cols].sum().sum(axis=1)
+top_maker = maker_2w_totals.idxmax()
+top_maker_share = (maker_2w_totals.max() / maker_2w_totals.sum()) * 100
+
+# Identify new/emerging players
+maker_year_total = df.groupby(['Maker', 'Year'])[vehicle_cols].sum().sum(axis=1).unstack(fill_value=0)
+this_year = maker_year_total.columns[-1]
+
+# Filter makers that were not present last year
+previous_year = maker_year_total.columns[-2]
+new_players = maker_year_total[(maker_year_total[previous_year] == 0) & (maker_year_total[this_year] > 1000)][this_year]
+
+# Pick top emerging player based on absolute units
+if not new_players.empty:
+    top_emerging_maker = new_players.sort_values(ascending=False).head(1)
+    name = top_emerging_maker.index[0]
+    units = int(top_emerging_maker.iloc[0])
+    insight = f"**{name}** entered the market with {units:,} units this year, making a strong entry in the commercial vehicle space."
+    print(insight)
+else:
+    insight = "No major new entrants this year."
+
+
+# --- 4. Diesel Decline ---
+# --- Diesel Decline Insight (Pure Diesel Only) ---
+
+# Filter only rows where Fuel column contains exactly 'DIESEL'
+diesel_rows = df_fuel[df_fuel['Fuel'].str.upper() == 'DIESEL']
+
+# Group by Year and sum total registrations
+diesel_per_year = diesel_rows.groupby('Year')['Total'].sum().sort_index()
+
+# Calculate Year-over-Year change safely
+if len(diesel_per_year) > 1:
+    last_year = diesel_per_year.index[-2]
+    this_year = diesel_per_year.index[-1]
+    diesel_change = ((diesel_per_year[this_year] - diesel_per_year[last_year]) / diesel_per_year[last_year]) * 100
+else:
+    diesel_change = 0
+
+# Add + or - sign
+sign = "+" if diesel_change >= 0 else "-"
+diesel_change_str = f"{sign}{abs(diesel_change):.1f}%"
+
+
+# --- 5. Heavy Vehicles Growth (HGV + HMV) ---
+df['Heavy Vehicles'] = df['HGV'] + df['HMV']
+hv_per_year = df.groupby('Year')['Heavy Vehicles'].sum()
+hv_growth = ((hv_per_year.iloc[-1] - hv_per_year.iloc[-2]) / hv_per_year.iloc[-2]) * 100 if len(hv_per_year) > 1 else 0
+
+# --- Display Insights ---
+insights = [
+    f"🚗 EVs Are on Fire\nRegistrations soared {ev_growth:.1f}% YoY—prime time to invest in EV startups, battery tech, and charging infra.",
+    f"🏍️ {top_maker} Holds the Throne\nWith {top_maker_share:.1f}% in 2-wheelers, {top_maker} stays dominant—stable, high-volume, and trusted.",
+    f"⚡ {name} Makes a Bold Entry\nDebuts with {units:,} units—strong momentum in the commercial EV space.",
+    f"🛢️ Diesel Isn’t Done Yet\nRegistrations rose {diesel_change_str} YoY—still holding ground as cleaner tech gains pace.",
+    f"🚚 Heavy Vehicles on the Move\nHGV & HMV up {hv_growth:.1f}% YoY—driven by infrastructure and logistics boom."
+]
+
+
+for insight in insights:
+    print(insight + "\n")
+    
+
+
+
+# --- Generate enhanced HTML for investment insights ---
+html_content = """
+<style>
+/* Container */
+.insight-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 12px 0;
+}
+
+/* Card */
+.insight-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 22px 28px;
+    background: linear-gradient(135deg, #f9f9ff 0%, #eef2ff 100%);
+    border-radius: 22px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-left: 6px solid #667eea;
+    margin-bottom: 0px;
+}
+.insight-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.15);
+}
+
+/* Number Badge */
+.insight-number {
+    font-size: 28px;
+    font-weight: 800;
+    color: white;
+    min-width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* Text section */
+.insight-text {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.insight-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e1b4b;
+}
+.insight-detail {
+    font-size: 15px;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* Highlight key numbers inside detail */
+.insight-detail span {
+    font-weight: 700;
+    color: #4f46e5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .insight-card {
+        flex-direction: column;
+        align-items: flex-start;
+        border-left: none;
+        border-top: 6px solid #667eea;
+    }
+    .insight-number {
+        margin-bottom: 12px;
+    }
+}
+</style>
+<div class="insight-container">
+"""
+st.markdown(
+        "<h3 style='margin:0px' >💰Investment Insights</h3>",
+        unsafe_allow_html=True
+    )
+# --- Add each insight safely with highlighted numbers ---
+for i, insight in enumerate(insights, start=1):
+    parts = insight.split('\n', 1)  # Split at first newline only
+    title = parts[0]
+    detail = parts[1] if len(parts) > 1 else ""
+    
+    # Highlight numbers in the detail text
+    import re
+    detail = re.sub(r'([\d,.]+%?)', r'<span>\1</span>', detail)
+    
+    html_content += f"""
+    <div class="insight-card">
+        <div class="insight-number">{i}</div>
+        <div class="insight-text">
+            <div class="insight-title">{title}</div>
+            <div class="insight-detail">{detail}</div>
+        </div>
+    </div>
+    """
+
+html_content += "</div>"
+
+# --- Render using components ---
+components.html(html_content, height=700, scrolling=True)
+
+
+
+#  footer
+st.markdown('<hr class="custom-divider" style="margin-top:0px; padding:0px">', unsafe_allow_html=True)
+simple_footer = """
+<div style="text-align: center; margin-top: 0px; padding-top: 20px; font-size: 14px;">
+    Data Period: <strong>2020 - 2022</strong> | © 2024 Dashboard | Source: <a href="https://vahan.parivahan.gov.in/" style="color: #3b82f6;">VAHAN Dashboard</a>
+</div>
+"""
+
+st.markdown(simple_footer, unsafe_allow_html=True)
