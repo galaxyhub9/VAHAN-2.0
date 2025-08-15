@@ -1,4 +1,4 @@
-# VAHAN 2.0
+# 🏭VAHAN 2.0
 
 A data-driven dashboard to analyze and visualize vehicle registration trends in India using **Streamlit**, **Pandas**, and **NumPy**.  
 This project processes raw vehicle registration data, performs aggregations, and presents interactive visualizations for market insights.
