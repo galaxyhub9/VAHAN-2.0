@@ -18,31 +18,44 @@ Follow the steps below to run the project locally:
 
 
 1️⃣ Clone the repository
-
-```git clone https://github.com/galaxyhub9/VAHAN-2.0.git```
+```
+git clone https://github.com/galaxyhub9/VAHAN-2.0.git
+```
 
 2️⃣ Navigate to the 'test' directory
 
-```cd VAHAN-2.0/test```
+```
+cd VAHAN-2.0/test
+```
 
 3️⃣ Create a virtual environment
 
-```python -m venv venv```
+```
+python -m venv venv
+```
 
 4️⃣ Activate the virtual environment
 
 Windows
-```venv\Scripts\activate```
+```
+venv\Scripts\activate
+```
 Mac/Linux
-```source venv/bin/activate```
+```
+source venv/bin/activate
+```
 
 5️⃣ Install dependencies
 
-```pip install -r requirements.txt```
+```
+pip install -r requirements.txt
+```
 
 6️⃣ Run the Streamlit dashboard
 
-```streamlit run vahan.py```
+```
+streamlit run vahan.py
+```
 
 ## 📊 Data Assumptions
 
