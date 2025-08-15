@@ -49,7 +49,9 @@ Mac/Linux
 - **Source**: Data has been downloaded from the [official VAHAN Dashboard](https://vahan.parivahan.gov.in/vahan4dashboard/vahan/dashboardview.xhtml).
 
 - **Data Preparation**:
+  - Data is dowmloaded in excel format.  
   - Added a `Year` column for each dataset.
+  - Converted it into DataFrame using pandas. 
   - Aggregated monthly and yearly data into separate files for better modularity.
   - Data of year 2020 to 2022 has been used.
   - All datasets are cleaned and structured for easier analysis in the dashboard.
