@@ -3,6 +3,12 @@
 A data-driven dashboard to analyze and visualize vehicle registration trends in India using **Streamlit**, **Pandas**, and **NumPy**.  
 This project processes raw vehicle registration data, performs aggregations, and presents interactive visualizations for market insights.
 
+## RESULT
+
+
+https://github.com/user-attachments/assets/511dbe5f-b053-498d-971d-5926a2e1f278
+
+
 ---
 ## 📈 key Investor Insights I discovered
 
